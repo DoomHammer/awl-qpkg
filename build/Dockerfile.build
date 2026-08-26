@@ -1,0 +1,14 @@
+FROM gmeligio/flutter-web:3.47.1
+
+WORKDIR /go
+
+VOLUME /out
+
+USER root
+RUN apt-get update \
+  && apt-get install -y file golang-go \
+  && rm -rf /var/lib/apt/lists/* \
+  &&  git config --global --add safe.directory /home/flutter/sdks/flutter
+
+COPY --chmod=755 build.sh /
+CMD /build.sh
