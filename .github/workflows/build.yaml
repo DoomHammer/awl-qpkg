@@ -1,0 +1,36 @@
+name: Build packages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    env:
+      AWL_TAG: v0.19.0
+    steps:
+      - name: Set awl version from source
+        run: echo "AWL_TAG=$(curl https://api.github.com/repos/anywherelan/awl/tags -s | jq '.[0].name' -r)" >> $GITHUB_ENV
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create awl build container
+        run: make build-awl-container
+
+      - name: Create QDK build container
+        run: make build-qdk-container
+
+      - name: Create awl QPKG
+        run: make out/pkg
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: awl-${{ env.AWL_TAG }}-QPKG-all
+          path: out/pkg/

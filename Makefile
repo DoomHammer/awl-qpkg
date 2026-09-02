@@ -4,18 +4,26 @@ AWL_UI_PORT ?= 8639
 .stamp:
 	mkdir -p .stamp
 
+.PHONY: build-awl-container
+build-awl-container: .stamp/build-awl-container
 .stamp/build-awl-container: .stamp build/build.sh build/Dockerfile.build
 	docker build --platform linux/amd64 -f build/Dockerfile.build -t awl-qnap-builder:latest build/
 	touch .stamp/build-awl-container
 
+.PHONY: out/awl
+out/awl: .stamp/out_awl
 .stamp/out_awl: .stamp/build-awl-container
 	docker run --platform linux/amd64 --rm -v ${CURDIR}/out:/out -e AWL_TAG=${AWL_TAG} awl-qnap-builder
 	touch .stamp/out_awl
 
+.PHONY: build-qdk-container
+build-qdk-container: .stamp/build-qdk-container
 .stamp/build-qdk-container: .stamp build/build-qpkg.sh build/Dockerfile.qpkg
 	docker build --platform linux/amd64 -f build/Dockerfile.qpkg -t qdk:latest build/
 	touch .stamp/build-qdk-container
 
+.PHONY: out/pkg
+out/pkg: .stamp/out_pkg
 .stamp/out_pkg: .stamp/build-qdk-container .stamp/out_awl
 	docker run --platform linux/amd64 --rm -v ${CURDIR}/out:/out -v ${CURDIR}/data:/data -e AWL_TAG=${AWL_TAG} -e AWL_UI_PORT=${AWL_UI_PORT} qdk:latest
 	touch .stamp/out_pkg
